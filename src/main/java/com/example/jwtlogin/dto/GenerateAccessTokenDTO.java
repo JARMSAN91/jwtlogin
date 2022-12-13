@@ -2,13 +2,10 @@ package com.example.jwtlogin.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class GeneratedTokenDTO {
+public class GenerateAccessTokenDTO {
 
     private String accessToken;
-    private String refreshToken;
 }

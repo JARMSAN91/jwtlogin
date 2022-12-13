@@ -28,9 +28,10 @@ public class SecurityConfiguration {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/v2/auth/login").permitAll()
+                .requestMatchers("/v2/auth/signup").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
-                .anyRequest().authenticated());
+                .anyRequest().permitAll());
 
         http.exceptionHandling().accessDeniedPage("/login");
 
