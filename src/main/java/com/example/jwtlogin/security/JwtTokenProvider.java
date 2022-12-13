@@ -11,8 +11,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -74,6 +77,11 @@ public class JwtTokenProvider {
     }
   }
 
+  public Boolean validateTokenWithRequest(HttpServletRequest request){
+
+    return validateToken(resolveToken(request));
+  }
+
   public RefreshTokenModel createRefreshToken(UserModel userModel, RefreshTokenModel refreshToken) {
 
     refreshToken.setUser(userModel);
@@ -84,4 +92,8 @@ public class JwtTokenProvider {
     return refreshToken;
   }
 
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(12);
+  }
 }

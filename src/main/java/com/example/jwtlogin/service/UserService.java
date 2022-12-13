@@ -17,8 +17,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.Set;
+
 
 @Service
 public class UserService {
@@ -64,6 +64,7 @@ public class UserService {
 
     public UserDataDTO findUserByToken(HttpServletRequest request) {
 
+        jwtTokenProvider.validateTokenWithRequest(request);
         UserModel userModel = userDAO
                 .findByEmail(jwtTokenProvider.getEmail(jwtTokenProvider.resolveToken(request)))
                 .orElseThrow(() ->new UsernameNotFoundException("Email with jwtToken not found"));
