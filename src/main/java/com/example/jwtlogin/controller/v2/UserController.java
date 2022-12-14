@@ -1,9 +1,8 @@
-package com.example.jwtlogin.controller;
+package com.example.jwtlogin.controller.v2;
 
 import com.example.jwtlogin.dto.*;
 import com.example.jwtlogin.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -59,6 +57,7 @@ public class UserController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = GenerateAccessTokenDTO.class)))})
     public ResponseEntity<?> refresh() {
+
         return ResponseEntity.ok(new GenerateAccessTokenDTO("token"));
     }
 

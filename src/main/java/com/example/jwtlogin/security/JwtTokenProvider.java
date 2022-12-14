@@ -1,13 +1,9 @@
 package com.example.jwtlogin.security;
 
 import com.example.jwtlogin.dao.RefreshTokenDAO;
-import com.example.jwtlogin.exception.CustomException;
 import com.example.jwtlogin.model.RefreshTokenModel;
 import com.example.jwtlogin.model.UserModel;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,12 +65,8 @@ public class JwtTokenProvider {
   }
 
   public boolean validateToken(String token) {
-    try {
       Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token); // TODO refactor with assigned Key
       return true;
-    } catch (JwtException | IllegalArgumentException e) {
-      throw new CustomException("Expired or invalid JWT token", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
   }
 
   public Boolean validateTokenWithRequest(HttpServletRequest request){

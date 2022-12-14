@@ -4,7 +4,7 @@ import com.example.jwtlogin.dao.UserDAO;
 import com.example.jwtlogin.dto.GeneratedTokenDTO;
 import com.example.jwtlogin.dto.UserDataDTO;
 import com.example.jwtlogin.dto.UserRegisterDTO;
-import com.example.jwtlogin.exception.CustomException;
+import com.example.jwtlogin.exception.UserAlreadyExistException;
 import com.example.jwtlogin.mapper.RefreshTokenToGeneratedTokenMapper;
 import com.example.jwtlogin.mapper.UserMapper;
 import com.example.jwtlogin.model.EnumRole;
@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -45,7 +46,7 @@ public class UserService {
         return refreshTokenToGeneratedTokenMapper.map(jwtTokenProvider.createToken(userModel));
     }
 
-    public GeneratedTokenDTO signup(UserRegisterDTO userRegisterDTO){
+    public GeneratedTokenDTO signup(UserRegisterDTO userRegisterDTO) {
 
         if(!existUser(userRegisterDTO.getEmail()) && roleService.existRole(EnumRole.ROLE_USER)) {
             UserModel userModel = userMapper.map(userRegisterDTO);
@@ -53,7 +54,7 @@ public class UserService {
             userModel = userDAO.save(userModel);
             return refreshTokenToGeneratedTokenMapper.map(jwtTokenProvider.createToken(userModel));
         } else {
-            throw new CustomException("Username is already in use", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new UserAlreadyExistException();
         }
     }
 
