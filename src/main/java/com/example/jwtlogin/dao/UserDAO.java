@@ -10,10 +10,10 @@ public interface UserDAO extends JpaRepository<UserModel, Integer> {
 
     boolean existsByEmail(String email);
 
-    Optional<UserModel> findByEmail(String email);
-
     Optional<UserModel> findOneByEmailAndPassword(String email, String password);
 
     @Transactional
     void deleteByEmail(String email);
+
+    Optional<UserModel> findOneByEmail(String email);
 }

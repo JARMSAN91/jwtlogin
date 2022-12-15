@@ -20,6 +20,6 @@ public class JwtloginApplication implements CommandLineRunner {
 	@Override
 	public void run(String... params) throws Exception {
 
-		roleService.createRoleStandart();
+		//roleService.createRoleStandart();
 	}
 }

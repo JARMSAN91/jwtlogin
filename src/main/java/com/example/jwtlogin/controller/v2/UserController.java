@@ -3,6 +3,7 @@ package com.example.jwtlogin.controller.v2;
 import com.example.jwtlogin.dto.*;
 import com.example.jwtlogin.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,8 +32,7 @@ public class UserController {
                     @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = GeneratedTokenDTO.class)))})
     public ResponseEntity<GeneratedTokenDTO> login(@Valid @org.springframework.web.bind.annotation.RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody UserLoginDTO userLoginDto) {
 
-        final GeneratedTokenDTO generatedTokenDTO = userService.signin(userLoginDto.getEmail(), userLoginDto.getPassword());
-        return ResponseEntity.ok(generatedTokenDTO);
+        return ResponseEntity.ok(userService.signin(userLoginDto.getEmail(), userLoginDto.getPassword()));
     }
 
     @PostMapping("/signup")
@@ -40,10 +40,10 @@ public class UserController {
             summary = "${UserController.signup}",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = GeneratedTokenDTO.class)))})
-    public ResponseEntity<?> signUp(@Valid @org.springframework.web.bind.annotation.RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody UserRegisterDTO userRegisterDTO) {
+    public ResponseEntity<GeneratedTokenDTO> signUp(@Valid @org.springframework.web.bind.annotation.RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody UserRegisterDTO userRegisterDTO) {
 
-        validUserInput(userRegisterDTO);
-        return ResponseEntity.ok(userService.signup(userRegisterDTO));
+       // validUserInput(userRegisterDTO);
+        return ResponseEntity.ok(userService.register(userRegisterDTO));
     }
 
     private void validUserInput(UserRegisterDTO userRegisterDTO) {
@@ -56,9 +56,9 @@ public class UserController {
             summary = "${UserController.refresh}",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = GenerateAccessTokenDTO.class)))})
-    public ResponseEntity<?> refresh() {
+    public ResponseEntity<AccessTokenDTO> refresh(@Valid @Parameter(name = "refreshToken") @RequestParam  String refreshToken) {
 
-        return ResponseEntity.ok(new GenerateAccessTokenDTO("token"));
+        return ResponseEntity.ok(userService.refreshUserToken(refreshToken));
     }
 
     @GetMapping("/me")
@@ -69,7 +69,17 @@ public class UserController {
                     @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = UserDataDTO.class)))})
     public ResponseEntity<UserDataDTO> requestUserInfo(HttpServletRequest request) {
 
-        UserDataDTO userData = userService.findUserByToken(request);
-        return ResponseEntity.ok(userData);
+        return ResponseEntity.ok(userService.requestUserInfo(request));
+    }
+    @PostMapping("/logout")
+    @Operation(
+            summary = "${UserController.logout}",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK_MSG", content = @Content(schema = @Schema(implementation = UserDataDTO.class)))})
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+
+        userService.deleteToken(request);
+        return ResponseEntity.noContent().build();
     }
 }

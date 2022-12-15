@@ -27,7 +27,7 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("Imbric login with JSON Web Token Authentication API")
+                .title("Login with JSON Web Token Authentication API")
                 .description("Simple jwt login example")
                 .version("0.0.1")
                 .contact(apiContact());

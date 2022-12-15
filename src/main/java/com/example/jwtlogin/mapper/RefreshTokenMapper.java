@@ -1,11 +1,12 @@
 package com.example.jwtlogin.mapper;
 
+import com.example.jwtlogin.dto.AccessTokenDTO;
 import com.example.jwtlogin.dto.GeneratedTokenDTO;
 import com.example.jwtlogin.model.RefreshTokenModel;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RefreshTokenToGeneratedTokenMapper {
+public class RefreshTokenMapper {
 
     public GeneratedTokenDTO map(RefreshTokenModel refreshTokenModel) {
 
@@ -15,5 +16,14 @@ public class RefreshTokenToGeneratedTokenMapper {
         generatedTokenDTO.setAccessToken(refreshTokenModel.getAccessToken());
 
         return generatedTokenDTO;
+    }
+
+    public AccessTokenDTO mapToAccessToken(RefreshTokenModel refreshTokenModel) {
+
+        final AccessTokenDTO acessTokenDTO = new AccessTokenDTO();
+
+        acessTokenDTO.setAccessToken(refreshTokenModel.getAccessToken());
+
+        return  acessTokenDTO;
     }
 }

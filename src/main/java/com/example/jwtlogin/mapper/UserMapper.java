@@ -10,16 +10,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserMapper {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
     public UserModel map(UserRegisterDTO userRegisterDTO){
 
         UserModel userModel = new UserModel();
 
         userModel.setEmail(userRegisterDTO.getEmail());
         userModel.setName(userRegisterDTO.getName());
-        userModel.setPassword(passwordEncoder.encode(userRegisterDTO.getPassword()));
         userModel.setPhone(userRegisterDTO.getPhone());
 
         return userModel;

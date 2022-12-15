@@ -2,22 +2,24 @@ package com.example.jwtlogin.service;
 
 import com.example.jwtlogin.dao.UserDAO;
 import com.example.jwtlogin.dto.GeneratedTokenDTO;
+import com.example.jwtlogin.dto.AccessTokenDTO;
 import com.example.jwtlogin.dto.UserDataDTO;
 import com.example.jwtlogin.dto.UserRegisterDTO;
+import com.example.jwtlogin.exception.InvalidUserException;
+import com.example.jwtlogin.exception.TokenRefreshException;
 import com.example.jwtlogin.exception.UserAlreadyExistException;
-import com.example.jwtlogin.mapper.RefreshTokenToGeneratedTokenMapper;
 import com.example.jwtlogin.mapper.UserMapper;
 import com.example.jwtlogin.model.EnumRole;
 import com.example.jwtlogin.model.UserModel;
-import com.example.jwtlogin.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.Set;
 
 
@@ -27,32 +29,36 @@ public class UserService {
     @Autowired
     private UserDAO userDAO;
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    @Autowired
-    private RefreshTokenToGeneratedTokenMapper refreshTokenToGeneratedTokenMapper;
+    private TokenService tokenService;
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
     private RoleService roleService;
-
-
-    public GeneratedTokenDTO signin(String email, String password){
-
-        UserModel userModel = userDAO.findOneByEmailAndPassword(email, password).orElseThrow(() ->new UsernameNotFoundException("Email '" + email + "' not found"));
-        passwordEncoder.matches(password, userModel.getPassword());
-
-        return refreshTokenToGeneratedTokenMapper.map(jwtTokenProvider.createToken(userModel));
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
-    public GeneratedTokenDTO signup(UserRegisterDTO userRegisterDTO) {
 
-        if(!existUser(userRegisterDTO.getEmail()) && roleService.existRole(EnumRole.ROLE_USER)) {
+    public GeneratedTokenDTO signin(String email, String password) {
+
+        UserModel userModel = userDAO.findOneByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email '" + email + "' not found"));
+
+        if(!passwordEncoder().matches(password, userModel.getPassword())) {
+            throw new InvalidUserException();
+        }
+
+        return tokenService.mapToGeneratedDTO(tokenService.createToken(userModel));
+    }
+
+    public GeneratedTokenDTO register(UserRegisterDTO userRegisterDTO) {
+
+        if (!existUser(userRegisterDTO.getEmail()) && roleService.existRole(EnumRole.ROLE_USER)) {
             UserModel userModel = userMapper.map(userRegisterDTO);
+            userModel.setPassword(passwordEncoder().encode(userRegisterDTO.getPassword()));
             userModel.setRoles(Set.of(roleService.getUserRoleModel(EnumRole.ROLE_USER)));
             userModel = userDAO.save(userModel);
-            return refreshTokenToGeneratedTokenMapper.map(jwtTokenProvider.createToken(userModel));
+            return tokenService.mapToGeneratedDTO(tokenService.createToken(userModel));
         } else {
             throw new UserAlreadyExistException();
         }
@@ -60,21 +66,42 @@ public class UserService {
 
     public UserModel getUserByEmail(String email) {
 
-        return userDAO.findByEmail(email).orElseThrow(() ->new UsernameNotFoundException("Email '" + email + "' not found"));
+        return userDAO.findOneByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email '" + email + "' not found"));
     }
 
-    public UserDataDTO findUserByToken(HttpServletRequest request) {
+    public UserDataDTO requestUserInfo(HttpServletRequest request) {
 
-        jwtTokenProvider.validateTokenWithRequest(request);
-        UserModel userModel = userDAO
-                .findByEmail(jwtTokenProvider.getEmail(jwtTokenProvider.resolveToken(request)))
-                .orElseThrow(() ->new UsernameNotFoundException("Email with jwtToken not found"));
+        return userMapper.map(findUserByToken(request));
+    }
 
-        return userMapper.map(userModel);
+    public UserModel findUserByToken (HttpServletRequest request) {
+
+        tokenService.validateTokenWithRequest(request);
+        return userDAO
+                .findOneByEmail(tokenService.getEmail(tokenService.resolveToken(request)))
+                .orElseThrow(() -> new UsernameNotFoundException("Email with jwtToken not found"));
     }
 
     public Boolean existUser(String email) {
 
         return userDAO.existsByEmail(email);
     }
+
+    public AccessTokenDTO refreshUserToken(String refreshTokenDTO) {
+
+        return tokenService.findByToken(refreshTokenDTO)
+                .map(tokenService::verifyExpiration)
+                .map(tokenService::refreshUserAccessToken)
+                .map(tokenService::saveTokenModel)
+                .map(tokenService::mapToAccessTokenDTO).orElseThrow(TokenRefreshException::new);
+
+    }
+
+    @Transactional
+    public void deleteToken(HttpServletRequest request) {
+
+        tokenService.deleteTokenByUser(findUserByToken(request));
+    }
+
+
 }
