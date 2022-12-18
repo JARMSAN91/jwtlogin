@@ -46,11 +46,6 @@ public class UserController {
         return ResponseEntity.ok(userService.register(userRegisterDTO));
     }
 
-    private void validUserInput(UserRegisterDTO userRegisterDTO) {
-
-        //TODO
-    }
-
     @GetMapping("/refresh")
     @Operation(
             summary = "${UserController.refresh}",

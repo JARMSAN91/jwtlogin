@@ -1,6 +1,7 @@
 package com.example.jwtlogin.service;
 
 import com.example.jwtlogin.dao.UserRoleDAO;
+import com.example.jwtlogin.exception.InvalidUserRoleException;
 import com.example.jwtlogin.model.EnumRole;
 import com.example.jwtlogin.model.UserRoleModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,6 @@ public class RoleService {
 
     public UserRoleModel getUserRoleModel(EnumRole roleUser) {
 
-        return userRoleDAO.findByName(roleUser).orElseThrow( );
+        return userRoleDAO.findByName(roleUser).orElseThrow(InvalidUserRoleException::new);
     }
 }

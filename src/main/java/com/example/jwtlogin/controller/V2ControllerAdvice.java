@@ -32,6 +32,8 @@ public class V2ControllerAdvice {
     private String ERROR_JWT_REFRESH_EXPIRED;
     @Value("${exception.error.jwt.refresh.exception}")
     private String ERROR_JWT_REFRESH_EXCEPTION;
+    @Value("${exception.error.user.role.exception}")
+    private String USER_ROLE_EXCEPTION;
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(InvalidUserException.class)
@@ -82,6 +84,11 @@ public class V2ControllerAdvice {
     @ExceptionHandler(TokenRefreshException.class)
     public MessageDTO jwtRefreshException(TokenRefreshException e) {
         return new MessageDTO(ERROR_JWT_REFRESH_EXCEPTION);
+    }
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler(InvalidUserRoleException.class)
+    public MessageDTO jwtRefreshException(InvalidUserRoleException e) {
+        return new MessageDTO(USER_ROLE_EXCEPTION);
     }
 
 }
