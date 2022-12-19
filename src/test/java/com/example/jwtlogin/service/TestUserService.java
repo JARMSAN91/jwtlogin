@@ -5,9 +5,12 @@ import com.example.jwtlogin.dao.UserRoleDAO;
 import com.example.jwtlogin.dto.AccessTokenDTO;
 import com.example.jwtlogin.dto.GeneratedTokenDTO;
 import com.example.jwtlogin.dto.UserDataDTO;
+import com.example.jwtlogin.dto.UserRegisterDTO;
 import com.example.jwtlogin.exception.InvalidUserException;
 import com.example.jwtlogin.exception.InvalidUserRoleException;
 import com.example.jwtlogin.exception.TokenRefreshException;
+import com.example.jwtlogin.exception.UserAlreadyExistException;
+import com.example.jwtlogin.mapper.UserMapper;
 import com.example.jwtlogin.model.EnumRole;
 import com.example.jwtlogin.model.RefreshTokenModel;
 import com.example.jwtlogin.model.UserModel;
@@ -32,12 +35,12 @@ import java.util.Optional;
 public class TestUserService {
 
     private static final UserModel USER_MODEL = new UserModel();
-    private static final UserDataDTO USER_DATA_DTO = new UserDataDTO();
-    private static final GeneratedTokenDTO GENERATED_TOKEN_DTO = new GeneratedTokenDTO();
+    private static final UserRegisterDTO USER_REGISTER_DTO = new UserRegisterDTO();
     private static final AccessTokenDTO ACCESS_TOKEN_DTO = new AccessTokenDTO();
     private static final String USER_EMAIL_OK = "prueba@prueba.com";
     private static final String USER_EMAIL_KO = "ko@prueba.com";
     private static final String PASS = "123456890";
+    private static final String PHONE = "123456890";
     private static final String REFRESH_TOKEN_OK = "bf296257-001f-43ed-b9f3-9bda84b9faaf";
     private static final String ACCESS_TOKEN_OK = """
             eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcnVlYmFAcHJ1ZWJhLmNvbSIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfVVNFUiJ9XSwiaW
@@ -49,6 +52,10 @@ public class TestUserService {
     private UserDAO userDAO;
     @Mock
     private TokenService tokenService;
+    @Mock
+    private RoleService  roleService;
+    @Mock
+    private UserMapper userMapper;
 
 
     @Test
@@ -128,6 +135,39 @@ public class TestUserService {
     public void requestUserInfoKO() {
 
         Assertions.assertThrowsExactly(UsernameNotFoundException.class, () -> userService.requestUserInfo(null));
+    }
+
+    @Test
+    public void registerOK() {
+
+        USER_REGISTER_DTO.setName("name");
+        USER_REGISTER_DTO.setEmail(USER_EMAIL_OK);
+        USER_REGISTER_DTO.setPassword(PASS);
+        USER_REGISTER_DTO.setPhone(PHONE);
+
+        Mockito.when(roleService.existRole(Mockito.any())).thenReturn(Boolean.TRUE);
+        Mockito.when(userMapper.map(Mockito.any(UserRegisterDTO.class))).thenReturn(new UserModel());
+        Mockito.when(roleService.getUserRoleModel(EnumRole.ROLE_USER)).thenReturn(new UserRoleModel());
+        Mockito.when(userService.register(USER_REGISTER_DTO)).thenReturn(new GeneratedTokenDTO(
+                ACCESS_TOKEN_OK, REFRESH_TOKEN_OK
+        ));
+
+        GeneratedTokenDTO generatedTokenDTO = userService.register(USER_REGISTER_DTO);
+
+        Assertions.assertNotNull(generatedTokenDTO);
+        Assertions.assertEquals(ACCESS_TOKEN_OK, generatedTokenDTO.getAccessToken());
+        Assertions.assertEquals(REFRESH_TOKEN_OK, generatedTokenDTO.getRefreshToken());
+    }
+
+    @Test
+    public void registerKO() {
+
+        USER_REGISTER_DTO.setName("name");
+        USER_REGISTER_DTO.setEmail(USER_EMAIL_OK);
+        USER_REGISTER_DTO.setPassword(PASS);
+        USER_REGISTER_DTO.setPhone(PHONE);
+
+        Assertions.assertThrowsExactly(UserAlreadyExistException.class, () -> userService.register(USER_REGISTER_DTO));
     }
 
     @Test
