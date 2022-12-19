@@ -42,13 +42,17 @@ public class UserService {
 
     public GeneratedTokenDTO signin(String email, String password) {
 
-        UserModel userModel = userDAO.findOneByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email '" + email + "' not found"));
+        UserModel userModel = getUserByEmail(email);
 
-        if(!passwordEncoder().matches(password, userModel.getPassword())) {
-            throw new InvalidUserException();
-        }
+        checkUserPasswordMatch(password, userModel.getPassword());
 
         return tokenService.mapToGeneratedDTO(tokenService.createToken(userModel));
+    }
+
+    void checkUserPasswordMatch(String password, String passwordonDB) {
+        if(!passwordEncoder().matches(password, passwordonDB)) {
+            throw new InvalidUserException();
+        }
     }
 
     public GeneratedTokenDTO register(UserRegisterDTO userRegisterDTO) {
@@ -97,7 +101,6 @@ public class UserService {
 
     }
 
-    @Transactional
     public void deleteToken(HttpServletRequest request) {
 
         tokenService.deleteTokenByUser(findUserByToken(request));

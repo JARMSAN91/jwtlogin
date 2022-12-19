@@ -30,7 +30,7 @@ public class UserModel {
     @Size(min = 8, message = "Minimum password length: 8 characters")
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "usermodel_id"),
             inverseJoinColumns = @JoinColumn(name = "userrole_id"))

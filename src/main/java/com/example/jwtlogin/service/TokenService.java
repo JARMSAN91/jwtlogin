@@ -8,12 +8,15 @@ import com.example.jwtlogin.mapper.RefreshTokenMapper;
 import com.example.jwtlogin.model.RefreshTokenModel;
 import com.example.jwtlogin.model.UserModel;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
@@ -68,7 +71,7 @@ public class TokenService {
             .setClaims(claims)
             .setIssuedAt(now)
             .setExpiration(validity)
-            .signWith(SignatureAlgorithm.HS256, secretKey)//
+            .signWith(generateKey(secretKey), SignatureAlgorithm.HS256)//
             .compact();
   }
 
@@ -78,7 +81,7 @@ public class TokenService {
   }
 
   public String getEmail(String token) {
-    return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject(); //  TODO refactor with assigned Key
+    return Jwts.parserBuilder().setSigningKey(generateKey(secretKey)).build().parseClaimsJws(token).getBody().getSubject();
   }
 
   public String resolveToken(HttpServletRequest req) {
@@ -90,7 +93,7 @@ public class TokenService {
   }
 
   public boolean validateToken(String token) {
-    Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token); // TODO refactor with assigned Key
+    Jwts.parserBuilder().setSigningKey(generateKey(secretKey)).build().parseClaimsJws(token);
     return true;
   }
 
@@ -136,5 +139,10 @@ public class TokenService {
   public void deleteTokenByUser(UserModel userModel) {
 
     refreshTokenDAO.deleteByUser(userModel);
+  }
+
+  private SecretKey generateKey(String secret) {
+
+    return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
   }
 }
